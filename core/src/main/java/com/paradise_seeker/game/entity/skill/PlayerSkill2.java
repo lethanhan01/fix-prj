@@ -7,13 +7,13 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.paradise_seeker.game.entity.monster.Monster;
-
+import com.paradise_seeker.game.entity.player.*;
 import java.util.List;
 
 public class PlayerSkill2 extends PlayerSkill {
 	private float currentX, currentY;
-	private float offsetX = 0f;
-	private float offsetY = 0f;
+	private float offsetX = 1f;
+	private float offsetY = 1f;
 	private float stateTime = 0f;
 	private boolean isCasting = false;
 	private String currentDirection;
@@ -82,20 +82,20 @@ public class PlayerSkill2 extends PlayerSkill {
 			// Xác định offset dựa trên hướng
 			switch (direction) {
 				case "up":
-					this.offsetY = offset;
-					this.offsetX = 0f;
+					this.offsetY = offset+1f;
+					this.offsetX = 0.5f;
 					break;
 				case "down":
 					this.offsetY = -offset;
-					this.offsetX = 0f;
+					this.offsetX = 0.5f;
 					break;
 				case "left":
 					this.offsetX = -offset;
-					this.offsetY = 0f;
+					this.offsetY = 0.5f;
 					break;
 				case "right":
-					this.offsetX = offset;
-					this.offsetY = 0f;
+					this.offsetX = offset+1f;
+					this.offsetY = 0.5f;
 					break;
 				default:
 					System.err.println("Unknown direction: " + direction);
@@ -177,10 +177,10 @@ public class PlayerSkill2 extends PlayerSkill {
 	}
 
 	@Override
-	public void updatePosition(float playerX, float playerY) {
+	public void updatePosition(Player player) {
 		if (isCasting) {
-			this.currentX = playerX + offsetX;
-			this.currentY = playerY + offsetY;
+			this.currentX = player.lastPosition.x + offsetX;
+			this.currentY = player.lastPosition.y + offsetY;
 		}
 	}
 }

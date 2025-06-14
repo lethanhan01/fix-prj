@@ -10,6 +10,7 @@ import com.paradise_seeker.game.entity.monster.Monster;
 import com.paradise_seeker.game.screen.GameScreen;
 
 import java.util.List;
+import java.util.ArrayList;
 
 public class PlayerSkill1 extends PlayerSkill implements PlayerProjectile {
     private static final float MIN_X = 0f;
@@ -27,9 +28,11 @@ public class PlayerSkill1 extends PlayerSkill implements PlayerProjectile {
     private float stateTime = 0f;
     private String directionRaw;
     private Animation<TextureRegion> animDown;
+    private List<PlayerSkill1> activeProjectiles;
 
     public PlayerSkill1() {
         super(10, 500); // mana, cooldown
+        this.activeProjectiles = new ArrayList<>();
         loadSkillAnimations();
     }
 
@@ -62,18 +65,19 @@ public class PlayerSkill1 extends PlayerSkill implements PlayerProjectile {
     public void castSkill(float atk, float x, float y, String direction) {
         if (canUse(System.currentTimeMillis())) {
             // Remove any existing projectiles from this skill
-            GameScreen.activeProjectiles.removeIf(projectile -> projectile instanceof PlayerSkill1);
+            activeProjectiles.removeIf(projectile -> !projectile.isActive());
 
-            this.x = x;
-            this.y = y;
-            this.damage = atk * 2 * damageMultiplier;
-            this.direction = direction;
-            this.directionRaw = direction;
-            this.hitbox = new Rectangle(x, y, 1f, 1f);
-            this.animation = skillAnimations.get(direction);
-            this.active = true;
-            this.stateTime = 0f;
-            GameScreen.activeProjectiles.add(this);
+            PlayerSkill1 newProjectile = new PlayerSkill1();
+            newProjectile.x = x;
+            newProjectile.y = y;
+            newProjectile.damage = atk * 2 * damageMultiplier;
+            newProjectile.direction = direction;
+            newProjectile.directionRaw = direction;
+            newProjectile.hitbox = new Rectangle(x, y, 1f, 1f);
+            newProjectile.animation = skillAnimations.get(direction);
+            newProjectile.active = true;
+            newProjectile.stateTime = 0f;
+            activeProjectiles.add(newProjectile);
             setLastUsedTime(System.currentTimeMillis());
         }
     }
@@ -106,36 +110,38 @@ public class PlayerSkill1 extends PlayerSkill implements PlayerProjectile {
 
     @Override
     public void render(SpriteBatch batch) {
-        if (!active) return;
+        for (PlayerSkill1 projectile : activeProjectiles) {
+            if (!projectile.active) continue;
 
-        Animation<TextureRegion> animToDraw = animation;
-        if (animToDraw == null && animDown != null) {
-            animToDraw = animDown;
-        }
-        if (animToDraw != null) {
-            TextureRegion frame = animToDraw.getKeyFrame(stateTime, false);
-
-            float regionWidth = frame.getRegionWidth();
-            float regionHeight = frame.getRegionHeight();
-
-            float width, height, scale;
-            float targetBase = 0.75f;
-
-            if (directionRaw.equals("left") || directionRaw.equals("right")) {
-                scale = targetBase / regionHeight;
-            } else {
-                scale = targetBase / regionWidth;
+            Animation<TextureRegion> animToDraw = projectile.animation;
+            if (animToDraw == null && projectile.animDown != null) {
+                animToDraw = projectile.animDown;
             }
-            width = regionWidth * scale;
-            height = regionHeight * scale;
+            if (animToDraw != null) {
+                TextureRegion frame = animToDraw.getKeyFrame(projectile.stateTime, false);
 
-            float drawX = x - width / 2f;
-            float drawY = y - height / 2f;
-            float originX = width / 2f;
-            float originY = height / 2f;
-            float rotation = 0f;
+                float regionWidth = frame.getRegionWidth();
+                float regionHeight = frame.getRegionHeight();
 
-            batch.draw(frame, drawX, drawY, originX, originY, width, height, 1f, 1f, rotation);
+                float width, height, scale;
+                float targetBase = 0.75f;
+
+                if (projectile.directionRaw.equals("left") || projectile.directionRaw.equals("right")) {
+                    scale = targetBase / regionHeight;
+                } else {
+                    scale = targetBase / regionWidth;
+                }
+                width = regionWidth * scale;
+                height = regionHeight * scale;
+
+                float drawX = projectile.x - width / 2f;
+                float drawY = projectile.y - height / 2f;
+                float originX = width / 2f;
+                float originY = height / 2f;
+                float rotation = 0f;
+
+                batch.draw(frame, drawX, drawY, originX, originY, width, height, 1f, 1f, rotation);
+            }
         }
     }
 
@@ -165,6 +171,16 @@ public class PlayerSkill1 extends PlayerSkill implements PlayerProjectile {
 
     @Override
     public void updateSkill(float delta, List<Monster> monsters) {
-        update();
+        for (PlayerSkill1 projectile : activeProjectiles) {
+            projectile.update();
+            for (Monster monster : monsters) {
+                if (projectile.isActive() && !monster.isDead() && monster.getBounds().overlaps(projectile.getHitbox())) {
+                    monster.takeHit(projectile.getDamage());
+                    projectile.setInactive();
+                }
+            }
+        }
+        // Remove inactive projectiles
+        activeProjectiles.removeIf(projectile -> !projectile.isActive());
     }
 }

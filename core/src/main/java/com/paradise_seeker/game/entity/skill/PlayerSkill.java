@@ -7,7 +7,7 @@ import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import java.util.List;
 import com.paradise_seeker.game.entity.monster.Monster;
-
+import com.paradise_seeker.game.entity.player.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -53,7 +53,7 @@ public abstract class PlayerSkill implements Skill, Renderable {
     @Override
     public void render(SpriteBatch batch) {
     }
-    public void updatePosition(float x, float y) {
+    public void updatePosition(Player player) {
     }
 
     public void updateSkill(float delta, List<Monster> monsters) {

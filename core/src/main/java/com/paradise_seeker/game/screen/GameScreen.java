@@ -48,8 +48,6 @@ public class GameScreen implements Screen {
     public OrthographicCamera hudCamera;// Camera for the HUD elements
     public ShapeRenderer shapeRenderer;
     public boolean winTriggered = false;
-
-    public static List<PlayerProjectile> activeProjectiles = new ArrayList<>();
     public float zoom = 1.0f;
 
     public int[] mapcutsceneIndicesEnd = {0, 0, 0, 0, 0}; // Indices for cutscenes in the map
@@ -57,7 +55,7 @@ public class GameScreen implements Screen {
     public GameScreen(final Main game) {
         this.game = game;
         // Create player, initial position will come from Tiled data by mapManager
-		player = new Player();
+		player = new Player(this);
 		currentTalkingNPC = new Gipsy(); // Initialize with a default NPC
         this.mapManager = new GameMapManager(player);
         this.hud = new HUD(player, game.font);
@@ -140,24 +138,9 @@ public class GameScreen implements Screen {
 
             mapManager.getCurrentMap().checkCollisions(player, hud);
 
-            float playerCenterX = player.getBounds().x + player.getBounds().width / 2f;
-            float playerCenterY = player.getBounds().y + player.getBounds().height / 2f;
-            player.playerSkill2.updatePosition(playerCenterX, playerCenterY);
-
-            // Cập nhật logic skill2
+            player.playerSkill2.updatePosition(player);
             player.playerSkill2.updateSkill(delta, mapManager.getCurrentMap().getMonsters());
-            // Update projectiles
-            for (int i = activeProjectiles.size() - 1; i >= 0; i--) {
-                PlayerProjectile projectile = activeProjectiles.get(i);
-                projectile.update();
-                for (Monster monster : mapManager.getCurrentMap().getMonsters()) {
-                    if (projectile.isActive() && !monster.isDead() && monster.getBounds().overlaps(projectile.getHitbox())) {
-                        monster.takeHit(projectile.getDamage());
-                        projectile.setInactive();
-                    }
-                }
-                if (!projectile.isActive()) activeProjectiles.remove(i);
-            }
+            player.playerSkill1.updateSkill(delta, mapManager.getCurrentMap().getMonsters());
 
             // Update all monsters (AI, attack, movement)
             for (Monster monster : mapManager.getCurrentMap().getMonsters()) {
@@ -196,8 +179,6 @@ public class GameScreen implements Screen {
         player.playerRenderer.render(player, game.batch); // player không dùng interface Renderable, khác Skill
         player.playerSkill1.render(game.batch); // gọi tới Renderable interface
         player.playerSkill2.render(game.batch); // gọi tới Renderable interface
-        for (PlayerProjectile projectile : activeProjectiles) // gọi tới Renderable interface
-            projectile.render(game.batch);
         game.batch.end();
 
         // Render dialogue box

@@ -14,6 +14,7 @@ import com.paradise_seeker.game.object.item.Item;
 import com.paradise_seeker.game.rendering.animations.PlayerAnimationManager;
 import com.paradise_seeker.game.rendering.effects.DashTrailManager;
 import com.paradise_seeker.game.rendering.renderer.PlayerRendererManager;
+import com.paradise_seeker.game.screen.GameScreen;
 
 public class Player extends Character {
     public static final float MAX_HP = 1000;
@@ -39,7 +40,7 @@ public class Player extends Character {
     public PlayerAnimationManager animationManager;
     public PlayerInputHandlerManager inputHandler;
     public PlayerRendererManager playerRenderer;
-    public PlayerSkill playerSkill1 = new PlayerSkill1();
+    public PlayerSkill playerSkill1;
     public PlayerSkill playerSkill2 = new PlayerSkill2();
 
     public boolean isDead = false;
@@ -49,7 +50,7 @@ public class Player extends Character {
     public float invulnerabilityTimer = 0f;
     public static final float INVULNERABILITY_DURATION = 0.7f;
 
-    public Player() {
+    public Player(GameScreen gameScreen) {
         this.bounds = new Rectangle(0, 0, 1, 1);
         this.hp = MAX_HP;
         this.mp = MAX_MP;
@@ -65,6 +66,7 @@ public class Player extends Character {
         this.animationManager.setAnimations();
         this.inputHandler = new PlayerInputHandlerManager();
         this.playerRenderer = new PlayerRendererManager(this.animationManager);
+        this.playerSkill1 = new PlayerSkill1();
     }
 
     public Player(Rectangle bounds, float hp, float mp, float maxHp, float maxMp, float atk, float speed, float x, float y, PlayerSkill playerSkill1, PlayerSkill playerSkill2) {
